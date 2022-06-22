@@ -27,9 +27,9 @@ public class FractalRenderer {
 
     private static final BigDecimal centerX = new BigDecimal("-1.769233641266822788211");
     private static final BigDecimal centerY = new BigDecimal("0.003412911653518676758");
-    private static final float mag = 100000f;
+    private static final float mag = 1e8f;
 
-    private static final int maxIter = 256;
+    private static final int maxIter = 16384;
     final float[] orbitValues = new float[maxIter*2];
 
     private long window;
@@ -209,11 +209,6 @@ public class FractalRenderer {
 
     private void initUniforms() {
         glUniform2fv(
-            glGetUniformLocation(program, "center"),
-            new float[]{centerX.floatValue(), centerY.floatValue()}
-        );
-
-        glUniform2fv(
             glGetUniformLocation(program, "res"),
             new float[]{width, height}
         );
@@ -268,6 +263,8 @@ public class FractalRenderer {
         }
 
         try {
+            //noinspection ResultOfMethodCallIgnored
+            new File("out/").mkdirs();
             ImageIO.write(image, "png", new File("out/out.png"));
         } catch (IOException e) {
             e.printStackTrace();
