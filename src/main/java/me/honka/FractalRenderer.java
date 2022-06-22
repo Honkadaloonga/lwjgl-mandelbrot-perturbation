@@ -16,14 +16,14 @@ import java.math.RoundingMode;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
 
 import static org.lwjgl.opengl.GL46.*;
 import static org.lwjgl.system.MemoryUtil.NULL;
 
 public class FractalRenderer {
-    private static final int width = 1280;
-    private static final int height = 720;
+    private static final int width = 1920;
+    private static final int height = 1080;
+    private static final int aaLevel = 1;
 
     private static final BigDecimal centerX = new BigDecimal("-1.769233641266822788211");
     private static final BigDecimal centerY = new BigDecimal("0.003412911653518676758");
@@ -35,6 +35,9 @@ public class FractalRenderer {
     private long window;
     private int program;
     private int VAO;
+
+    //TODO add antialiasing to the fragment shader
+    //TODO render to an fbo instead of the window buffer cause the aspect ratio is fucked on high resolutions
 
     public static void main(String[] args) {
         System.out.println("Starting");
@@ -113,36 +116,26 @@ public class FractalRenderer {
         GLFW.glfwShowWindow(window);
     }
 
+    private int loadShader(String path, int type) throws Exception {
+        int res = glCreateShader(type);
+        glShaderSource(res, Files.readString(Path.of(path)));
+        glCompileShader(res);
+        if (glGetShaderi(res, GL_COMPILE_STATUS) == GL_FALSE) {
+            throw new Exception(String.format(
+                "Failed to compile vertex shader!\n\t%s",
+                glGetShaderInfoLog(res)
+            ));
+        }
+        return res;
+    }
+
     private void initProgram() throws Exception {
         GL.createCapabilities();
         System.out.println("Created capabilities");
 
-        int frag, vert;
-        {
-            vert = glCreateShader(GL_VERTEX_SHADER);
-            glShaderSource(vert, Files.readString(Path.of("res/quad.vert.glsl")));
-            glCompileShader(vert);
-            if (glGetShaderi(vert, GL_COMPILE_STATUS) == GL_FALSE) {
-                throw new Exception(String.format(
-                    "Failed to compile vertex shader!\n\t%s",
-                    glGetShaderInfoLog(vert)
-                ));
-            }
-        }
-        {
-            frag = glCreateShader(GL_FRAGMENT_SHADER);
-            String source = Files.readString(Path.of("res/quad.frag.glsl"));
-            source = source.replace("maxIter = maxIter;", "maxIter = "+maxIter+";");
-            source = source.replace("zvalues[maxIter];", "zvalues["+(maxIter*2)+"];");
-            glShaderSource(frag, source);
-            glCompileShader(frag);
-            if (glGetShaderi(frag, GL_COMPILE_STATUS) == GL_FALSE) {
-                throw new Exception(String.format(
-                    "Failed to compile fragment shader!\n\t%s",
-                    glGetShaderInfoLog(frag)
-                ));
-            }
-        }
+        int vert = loadShader("res/quad.vert.glsl", GL_VERTEX_SHADER);
+        int frag = loadShader("res/quad.frag.glsl", GL_FRAGMENT_SHADER);
+
         System.out.println("Loaded shaders");
 
         program = glCreateProgram();
@@ -211,6 +204,11 @@ public class FractalRenderer {
         glUniform2fv(
             glGetUniformLocation(program, "res"),
             new float[]{width, height}
+        );
+
+        glUniform1i(
+            glGetUniformLocation(program, "aaLevel"),
+            aaLevel
         );
 
         glUniform1f(

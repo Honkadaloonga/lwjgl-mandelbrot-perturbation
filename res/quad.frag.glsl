@@ -4,10 +4,11 @@ precision highp float;
 in vec2 pos;
 out vec4 fragColor;
 
-const int maxIter = maxIter;
-
 uniform vec2 res;
+uniform int aaLevel;
 uniform float mag;
+uniform int maxIter;
+
 uniform samplerBuffer sampler;
 
 // I love fourier transforms
