@@ -21,8 +21,8 @@ import static org.lwjgl.opengl.GL46.*;
 import static org.lwjgl.system.MemoryUtil.NULL;
 
 public class FractalRenderer {
-    private static final int width = 1920;
-    private static final int height = 1080;
+    private static final int width = 3840;
+    private static final int height = 2160;
     private static final int aaLevel = 1;
 
     private static final BigDecimal centerX = new BigDecimal("-1.769233641266822788211");
@@ -37,7 +37,6 @@ public class FractalRenderer {
     private int VAO;
 
     //TODO add antialiasing to the fragment shader
-    //TODO render to an fbo instead of the window buffer cause the aspect ratio is fucked on high resolutions
 
     public static void main(String[] args) {
         System.out.println("Starting");
@@ -106,7 +105,7 @@ public class FractalRenderer {
         GLFW.glfwWindowHint(GLFW.GLFW_VISIBLE, GLFW.GLFW_FALSE);
         GLFW.glfwWindowHint(GLFW.GLFW_RESIZABLE, GLFW.GLFW_FALSE);
 
-        window = GLFW.glfwCreateWindow(width, height, "Window", NULL, NULL);
+        window = GLFW.glfwCreateWindow(128, 128, "Window", NULL, NULL);
         if (window == NULL) {
             throw new RuntimeException("Failed to create GLFW window");
         }
@@ -233,6 +232,17 @@ public class FractalRenderer {
     }
 
     private void render() {
+        int RBO = glGenRenderbuffers();
+        glBindRenderbuffer(GL_RENDERBUFFER, RBO);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA, width, height);
+
+        int FBO = glGenFramebuffers();
+        glBindFramebuffer(GL_FRAMEBUFFER, FBO);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, RBO);
+        glDrawBuffer(GL_FRAMEBUFFER);
+
+        glViewport(0, 0, width, height);
+
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         glBindVertexArray(VAO);
@@ -244,7 +254,7 @@ public class FractalRenderer {
     }
 
     private void save() {
-        glReadBuffer(GL_FRONT);
+        glReadBuffer(GL_FRAMEBUFFER);
         ByteBuffer buffer = BufferUtils.createByteBuffer(width*height*4);
         glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
