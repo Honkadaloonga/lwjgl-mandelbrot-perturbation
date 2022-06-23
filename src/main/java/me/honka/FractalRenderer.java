@@ -21,15 +21,15 @@ import static org.lwjgl.opengl.GL46.*;
 import static org.lwjgl.system.MemoryUtil.NULL;
 
 public class FractalRenderer {
-    private static final int width = 3840;
-    private static final int height = 2160;
+    private static final int width = 1280;
+    private static final int height = 720;
     private static final int aaLevel = 1;
 
-    private static final BigDecimal centerX = new BigDecimal("-1.769233641266822788211");
-    private static final BigDecimal centerY = new BigDecimal("0.003412911653518676758");
-    private static final float mag = 1e8f;
+    private static final BigDecimal centerX = new BigDecimal("-1.7498908659090790412199344432013");
+    private static final BigDecimal centerY = new BigDecimal("0.0000000000531124733654468210850198622379365");
+    private static final float mag = 4e6f;
 
-    private static final int maxIter = 16384;
+    private static final int maxIter = 8192;
     final float[] orbitValues = new float[maxIter*2];
 
     private long window;
@@ -112,7 +112,7 @@ public class FractalRenderer {
         System.out.println("Window creation successful");
 
         GLFW.glfwMakeContextCurrent(window);
-        GLFW.glfwShowWindow(window);
+        GLFW.glfwHideWindow(window);
     }
 
     private int loadShader(String path, int type) throws Exception {

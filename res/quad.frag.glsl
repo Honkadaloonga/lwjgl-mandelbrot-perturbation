@@ -20,8 +20,8 @@ vec3 getCol(float v) {
     );
 }
 
-void main() {
-    vec2 dc = pos/mag*vec2(res.x/res.y, 1.0);
+vec3 sampleColor(vec2 inPos) {
+    vec2 dc = inPos/mag*vec2(res.x/res.y, 1.0);
     vec2 dz = vec2(0, 0);
     vec3 col = vec3(0, 0, 0);
 
@@ -41,5 +41,21 @@ void main() {
         dz = ndz;
     }
 
+    return col;
+}
+
+void main() {
+    vec3 col = vec3(0, 0, 0);
+    float aa = float(aaLevel);
+    for (float dx = 0; dx < aa; dx++) {
+        for (float dy = 0; dy < aa; dy++) {
+            col += sampleColor(vec2(
+                pos.x + (dx+0.5)/(aa*res.x),
+                pos.y + (dy+0.5)/(aa*res.y)
+            ));
+        }
+    }
+
+    col /= aa*aa;
     fragColor = vec4(col, 1.0);
 }
